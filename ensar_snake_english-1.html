@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Ensar Snake</title>
+<style>
+  :root{
+    --bg:#111;
+    --phone:#2e3440;
+    --screen:#b7c58a;
+    --screen-dark:#26351f;
+    --accent:#d8e4a8;
+    --btn:#454b56;
+    --btn2:#606773;
+    --text:#e9eef5;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at top, #222 0%, #111 55%, #090909 100%);
+    font-family:Arial, Helvetica, sans-serif;
+    color:var(--text);
+    overflow:hidden;
+  }
+
+  .wrap{
+    width:min(94vw, 430px);
+    text-align:center;
+  }
+
+  .brand{
+    font-size:14px;
+    letter-spacing:4px;
+    margin-bottom:8px;
+    opacity:.85;
+  }
+
+  .phone{
+    background:linear-gradient(145deg,#39414d,#242932);
+    border-radius:34px;
+    padding:22px 18px 25px;
+    box-shadow:0 20px 50px rgba(0,0,0,.45), inset 0 2px 2px rgba(255,255,255,.06);
+    border:2px solid #1e2229;
+  }
+
+  .speaker{
+    width:95px;
+    height:8px;
+    border-radius:10px;
+    background:#11161c;
+    margin:0 auto 15px;
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.08);
+  }
+
+  .screen-shell{
+    background:#161b20;
+    padding:12px;
+    border-radius:16px;
+    box-shadow:inset 0 0 0 2px #0e1013;
+  }
+
+  .screen{
+    position:relative;
+    background:var(--screen);
+    border-radius:7px;
+    padding:10px;
+    color:var(--screen-dark);
+    box-shadow: inset 0 0 18px rgba(53,72,38,.23);
+  }
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:"Courier New", monospace;
+    font-weight:bold;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+
+  canvas{
+    width:100%;
+    aspect-ratio:1/1;
+    display:block;
+    background:#a9b97b;
+    border:3px solid var(--screen-dark);
+    image-rendering:pixelated;
+  }
+
+  .overlay{
+    position:absolute;
+    inset:42px 10px 10px;
+    background:rgba(183,197,138,.87);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    font-family:"Courier New", monospace;
+    font-weight:bold;
+    color:var(--screen-dark);
+    text-align:center;
+    padding:20px;
+  }
+
+  .overlay.hidden{display:none;}
+
+  .overlay h1{
+    margin:0 0 10px;
+    font-size:28px;
+    letter-spacing:1px;
+  }
+
+  .overlay p{
+    margin:4px 0 14px;
+    font-size:15px;
+  }
+
+  .start-btn{
+    border:3px solid var(--screen-dark);
+    background:transparent;
+    color:var(--screen-dark);
+    font-family:"Courier New", monospace;
+    font-weight:bold;
+    padding:10px 18px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+
+  .controls{
+    margin-top:22px;
+    display:grid;
+    grid-template-columns:repeat(3, 72px);
+    grid-template-rows:repeat(3, 58px);
+    justify-content:center;
+    gap:8px;
+  }
+
+  .ctrl{
+    border:0;
+    background:linear-gradient(#5b6470,#3f4650);
+    color:white;
+    border-radius:15px;
+    font-size:26px;
+    box-shadow:0 5px 0 #242932, inset 0 1px 1px rgba(255,255,255,.18);
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+
+  .ctrl:active{
+    transform:translateY(4px);
+    box-shadow:0 1px 0 #242932;
+  }
+
+  .up{grid-column:2;grid-row:1}
+  .left{grid-column:1;grid-row:2}
+  .center{grid-column:2;grid-row:2;font-size:13px;font-weight:bold}
+  .right{grid-column:3;grid-row:2}
+  .down{grid-column:2;grid-row:3}
+
+  .hint{
+    font-size:12px;
+    opacity:.7;
+    margin-top:16px;
+    line-height:1.4;
+  }
+
+  @media (max-height:760px){
+    .phone{padding-top:14px;padding-bottom:16px}
+    .controls{margin-top:14px; grid-template-columns:repeat(3,64px); grid-template-rows:repeat(3,48px)}
+    .ctrl{font-size:22px}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">ENSAR GAMES</div>
+
+  <div class="phone">
+    <div class="speaker"></div>
+
+    <div class="screen-shell">
+      <div class="screen" id="screen">
+        <div class="topbar">
+          <span>SNAKE</span>
+          <span>SCORE: <span id="score">0</span></span>
+        </div>
+        <canvas id="game" width="300" height="300"></canvas>
+
+        <div class="overlay" id="overlay">
+          <h1>SNAKE</h1>
+          <p>The classic Nokia spirit is back 🐍</p>
+          <button class="start-btn" id="startBtn">START</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl up" data-dir="up">▲</button>
+      <button class="ctrl left" data-dir="left">◀</button>
+      <button class="ctrl center" id="restartBtn">RESET</button>
+      <button class="ctrl right" data-dir="right">▶</button>
+      <button class="ctrl down" data-dir="down">▼</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    Computer: arrow keys / WASD &nbsp; • &nbsp; Phone: buttons or swipe
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const scoreEl = document.getElementById("score");
+const overlay = document.getElementById("overlay");
+const startBtn = document.getElementById("startBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+const GRID = 15;
+const CELL = canvas.width / GRID;
+
+let snake, food, dir, nextDir, score, timer, running;
+let speed = 125;
+
+function resetGame(startImmediately = true){
+  clearInterval(timer);
+  snake = [
+    {x:7,y:7},
+    {x:6,y:7},
+    {x:5,y:7}
+  ];
+  dir = {x:1,y:0};
+  nextDir = {x:1,y:0};
+  score = 0;
+  speed = 125;
+  running = startImmediately;
+  scoreEl.textContent = score;
+  placeFood();
+  draw();
+
+  if(startImmediately){
+    overlay.classList.add("hidden");
+    timer = setInterval(gameLoop, speed);
+  }else{
+    overlay.classList.remove("hidden");
+  }
+}
+
+function placeFood(){
+  do{
+    food = {
+      x: Math.floor(Math.random()*GRID),
+      y: Math.floor(Math.random()*GRID)
+    };
+  } while(snake && snake.some(s => s.x === food.x && s.y === food.y));
+}
+
+function setDirection(name){
+  if(!running) return;
+
+  const map = {
+    up:{x:0,y:-1},
+    down:{x:0,y:1},
+    left:{x:-1,y:0},
+    right:{x:1,y:0}
+  };
+  const d = map[name];
+  if(!d) return;
+
+  if(d.x === -dir.x && d.y === -dir.y) return;
+  nextDir = d;
+}
+
+function gameLoop(){
+  dir = nextDir;
+
+  const head = {
+    x: snake[0].x + dir.x,
+    y: snake[0].y + dir.y
+  };
+
+  // Wrap-around, Nokia-style
+  if(head.x < 0) head.x = GRID - 1;
+  if(head.x >= GRID) head.x = 0;
+  if(head.y < 0) head.y = GRID - 1;
+  if(head.y >= GRID) head.y = 0;
+
+  if(snake.some(s => s.x === head.x && s.y === head.y)){
+    gameOver();
+    return;
+  }
+
+  snake.unshift(head);
+
+  if(head.x === food.x && head.y === food.y){
+    score += 10;
+    scoreEl.textContent = score;
+    placeFood();
+
+    if(score % 50 === 0 && speed > 65){
+      speed -= 8;
+      clearInterval(timer);
+      timer = setInterval(gameLoop, speed);
+    }
+  }else{
+    snake.pop();
+  }
+
+  draw();
+}
+
+function draw(){
+  ctx.fillStyle = "#a9b97b";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // faint LCD grid
+  ctx.strokeStyle = "rgba(38,53,31,.08)";
+  ctx.lineWidth = 1;
+  for(let i=0;i<=GRID;i++){
+    ctx.beginPath();
+    ctx.moveTo(i*CELL,0);
+    ctx.lineTo(i*CELL,canvas.height);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0,i*CELL);
+    ctx.lineTo(canvas.width,i*CELL);
+    ctx.stroke();
+  }
+
+  // food
+  ctx.fillStyle = "#26351f";
+  const pad = 5;
+  ctx.fillRect(food.x*CELL+pad, food.y*CELL+pad, CELL-pad*2, CELL-pad*2);
+
+  // snake
+  snake.forEach((part,index)=>{
+    ctx.fillStyle = "#26351f";
+    const p = index === 0 ? 2 : 3;
+    ctx.fillRect(part.x*CELL+p, part.y*CELL+p, CELL-p*2, CELL-p*2);
+  });
+
+  // eyes
+  const h = snake[0];
+  if(h){
+    ctx.fillStyle = "#a9b97b";
+    const ex = h.x*CELL + CELL/2 + dir.x*4;
+    const ey = h.y*CELL + CELL/2 + dir.y*4;
+    ctx.fillRect(ex-1, ey-1, 3, 3);
+  }
+}
+
+function gameOver(){
+  running = false;
+  clearInterval(timer);
+
+  overlay.innerHTML = `
+    <h1>GAME OVER</h1>
+    <p>Score: ${score}</p>
+    <button class="start-btn" id="againBtn">PLAY AGAIN</button>
+  `;
+  overlay.classList.remove("hidden");
+
+  document.getElementById("againBtn").addEventListener("click", ()=>{
+    restoreOverlay();
+    resetGame(true);
+  });
+}
+
+function restoreOverlay(){
+  overlay.innerHTML = `
+    <h1>SNAKE</h1>
+    <p>The classic Nokia spirit is back 🐍</p>
+    <button class="start-btn" id="startBtn2">START</button>
+  `;
+  const btn = document.getElementById("startBtn2");
+  if(btn) btn.addEventListener("click", ()=>resetGame(true));
+}
+
+startBtn.addEventListener("click", ()=>resetGame(true));
+restartBtn.addEventListener("click", ()=>resetGame(true));
+
+document.querySelectorAll("[data-dir]").forEach(btn=>{
+  btn.addEventListener("pointerdown", ()=>setDirection(btn.dataset.dir));
+});
+
+document.addEventListener("keydown", e=>{
+  const key = e.key.toLowerCase();
+  if(["arrowup","w"].includes(key)) setDirection("up");
+  if(["arrowdown","s"].includes(key)) setDirection("down");
+  if(["arrowleft","a"].includes(key)) setDirection("left");
+  if(["arrowright","d"].includes(key)) setDirection("right");
+  if(key === "enter" && !running) resetGame(true);
+});
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener("touchstart", e=>{
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+}, {passive:true});
+
+canvas.addEventListener("touchend", e=>{
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+
+  if(Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+
+  if(Math.abs(dx) > Math.abs(dy)){
+    setDirection(dx > 0 ? "right" : "left");
+  }else{
+    setDirection(dy > 0 ? "down" : "up");
+  }
+}, {passive:true});
+
+resetGame(false);
+</script>
+</body>
+</html>
